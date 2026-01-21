@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 import environ
 env = environ.Env()
 environ.Env.read_env()
@@ -254,8 +255,6 @@ EMAIL_HOST_USER = 'your@email.com'
 EMAIL_HOST_PASSWORD = 'yourpassword'
 
 # Render.com specific
-import dj_database_url
-import os
 
 if 'RENDER' in os.environ:
     DEBUG = False
