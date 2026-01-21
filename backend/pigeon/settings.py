@@ -178,7 +178,6 @@ TEMPLATES = [
         'DIRS': [
             BASE_DIR / 'templates',
             BASE_DIR / 'pigeon/templates',
-            BASE_DIR / 'frontend/build',  # Для React билда
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -253,15 +252,15 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-    BASE_DIR / 'frontend/build',
-    BASE_DIR / 'frontend/build/static',
-]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Для локальной разработки
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media' 
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -317,7 +316,18 @@ if 'RENDER' in os.environ:
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     
-    MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    # Убедитесь что whitenoise в начале middleware
+    MIDDLEWARE = [
+        'django.middleware.security.SecurityMiddleware',
+        'whitenoise.middleware.WhiteNoiseMiddleware',  # ДОБАВЬТЕ ЗДЕСЬ
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'corsheaders.middleware.CorsMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    ]
     
     # Если нет Redis на Render, используем файловые сессии
     if not REDIS_URL:
