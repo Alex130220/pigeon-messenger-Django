@@ -22,6 +22,7 @@ from django.views.decorators.http import require_POST
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
+from django.views.generic import TemplateView  
 from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from two_factor.urls import urlpatterns as tf_urls

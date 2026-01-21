@@ -17,7 +17,7 @@ env = environ.Env()
 environ.Env.read_env()
 
 # Добавляем импорт для Render.com
-import dj_database_url  # <-- ДОБАВИТЬ ЭТОТ ИМПОРТ
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -30,10 +30,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-q2%y#+z%-m5c*!&t%73twmvttt7x86!1)#w3_356k4nbhe_1)v')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', default=True)  # <-- Используем env переменную
+DEBUG = env('DEBUG', default=True)
 
 if DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'pigeon']
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'pigeon', '0.0.0.0']
 else:
     ALLOWED_HOSTS = ['pigeon.com', 'www.pigeon.com']
     SECURE_SSL_REDIRECT = True
@@ -67,18 +67,61 @@ INSTALLED_APPS = [
 
 ASGI_APPLICATION = 'pigeon.asgi.application'
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
-            "channel_capacity": {
-                "http.request": 200,
-                "http.response!*": 100,
+# Redis настройки - использовать только если есть REDIS_URL
+REDIS_URL = os.environ.get('REDIS_URL')
+
+if REDIS_URL:  # Если есть Redis URL (например, от Redis Cloud)
+    # Настройки каналов для WebSocket
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+                "channel_capacity": {
+                    "http.request": 200,
+                    "http.response!*": 100,
+                },
             },
-        },
-    },
-}
+        }
+    }
+    
+    # Настройки Redis для кэша и сессий
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL,
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "CONNECTION_POOL_KWARGS": {
+                    "ssl_cert_reqs": None,
+                    "decode_responses": True
+                }
+            }
+        }
+    }
+    
+    # Используем Redis для сессий
+    SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+    SESSION_CACHE_ALIAS = "default"
+else:
+    # Для локальной разработки используем InMemoryChannelLayer
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels.layers.InMemoryChannelLayer"
+        }
+    }
+    
+    # Локальные настройки для разработки
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "unique-snowflake",
+        }
+    }
+    
+    # Используем файловую систему для сессий
+    SESSION_ENGINE = "django.contrib.sessions.backends.file"
+    SESSION_FILE_PATH = os.path.join(BASE_DIR, 'sessions')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -95,11 +138,22 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8000",
+    "http://127.0.0.1:8000",
     "http://pigeon:8000",
+    "https://pigeon-messenger-django.onrender.com",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -124,6 +178,7 @@ TEMPLATES = [
         'DIRS': [
             BASE_DIR / 'templates',
             BASE_DIR / 'pigeon/templates',
+            BASE_DIR / 'frontend/build',  # Для React билда
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -200,6 +255,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
+    BASE_DIR / 'frontend/build',
     BASE_DIR / 'frontend/build/static',
 ]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -232,24 +288,10 @@ LOGGING = {
     },
 }
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/1",
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        }
-    }
-}
-
 LOGIN_URL = 'login' 
 LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = '/'
 CSRF_USE_SESSIONS = True
-
-# Для хранения сессий
-SESSION_ENGINE = "django.contrib.sessions.backends.cache"
-SESSION_CACHE_ALIAS = "default"
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
@@ -267,7 +309,8 @@ if 'RENDER' in os.environ:
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
-            conn_max_age=600
+            conn_max_age=600,
+            ssl_require=True
         )
     }
     
@@ -276,30 +319,20 @@ if 'RENDER' in os.environ:
     
     MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
     
-    # Настройки Redis для Render
-    REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
-    
-    # Обновляем CHANNEL_LAYERS для Render
-    CHANNEL_LAYERS = {
-        "default": {
-            "BACKEND": "channels_redis.core.RedisChannelLayer",
-            "CONFIG": {
-                "hosts": [REDIS_URL],
-                "channel_capacity": {
-                    "http.request": 200,
-                    "http.response!*": 100,
-                },
-            },
-        }
-    }
-    
-    # Обновляем CACHES для Render
-    CACHES = {
-        "default": {
-            "BACKEND": "django_redis.cache.RedisCache",
-            "LOCATION": REDIS_URL + "/1",
-            "OPTIONS": {
-                "CLIENT_CLASS": "django_redis.client.DefaultClient",
-            }
-        }
-    }
+    # Если нет Redis на Render, используем файловые сессии
+    if not REDIS_URL:
+        SESSION_ENGINE = "django.contrib.sessions.backends.file"
+        SESSION_FILE_PATH = os.path.join(BASE_DIR, 'sessions')
+        
+        # Создаем директорию для сессий если не существует
+        try:
+            os.makedirs(SESSION_FILE_PATH, exist_ok=True)
+        except Exception as e:
+            print(f"Warning: Could not create session directory: {e}")
+
+# Создаем директорию для сессий если не существует (для локальной разработки)
+if SESSION_ENGINE == "django.contrib.sessions.backends.file":
+    try:
+        os.makedirs(SESSION_FILE_PATH, exist_ok=True)
+    except Exception as e:
+        print(f"Warning: Could not create session directory: {e}")
