@@ -1,3 +1,14 @@
+.chat-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.chat-wrapper h1 {
+  color: #282c34;
+  margin-bottom: 20px;
+}
+
 .App {
   text-align: center;
 }
