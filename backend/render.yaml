@@ -3,9 +3,24 @@ services:
     name: pigeon-backend
     env: python
     buildCommand: |
+      # Создаем директории для статических файлов
+      mkdir -p static/css static/js static/images
+      
+      # Создаем простые статические файлы
+      echo "/* Основные стили */ body { margin: 0; font-family: sans-serif; }" > static/css/style.css
+      echo "console.log('Pigeon loaded');" > static/js/main.js
+      echo "placeholder" > static/images/Pigeon.png
+      echo "placeholder" > static/images/app-screenshot.png
+      
+      # Устанавливаем зависимости
       pip install -r requirements.txt
-      python manage.py collectstatic --noinput --clear
+      
+      # Применяем миграции ДО collectstatic
+      python manage.py makemigrations --noinput
       python manage.py migrate --noinput
+      
+      # Собираем статические файлы
+      python manage.py collectstatic --noinput --clear
     startCommand: gunicorn pigeon.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DATABASE_URL
@@ -19,9 +34,3 @@ services:
       - key: PYTHON_VERSION
         value: 3.11.0
     autoDeploy: true
-
-databases:
-  - name: pigeon-db
-    databaseName: pigeon
-    user: pigeon_user
-    plan: free
