@@ -16,6 +16,9 @@ import environ
 env = environ.Env()
 environ.Env.read_env()
 
+# Добавляем импорт для Render.com
+import dj_database_url  # <-- ДОБАВИТЬ ЭТОТ ИМПОРТ
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,7 +30,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-q2%y#+z%-m5c*!&t%73twmvttt7x86!1)#w3_356k4nbhe_1)v')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = env('DEBUG', default=True)  # <-- Используем env переменную
 
 if DEBUG:
     ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'pigeon']
@@ -248,18 +251,18 @@ SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 SESSION_CACHE_ALIAS = "default"
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.yourmailserver.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your@email.com'
-EMAIL_HOST_PASSWORD = 'yourpassword'
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=True)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 
 # Render.com specific
-
 if 'RENDER' in os.environ:
     DEBUG = False
     ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
     
+    # Используем dj_database_url только на Render
     DATABASES = {
         'default': dj_database_url.config(
             default=os.environ.get('DATABASE_URL'),
@@ -271,3 +274,31 @@ if 'RENDER' in os.environ:
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
     
     MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
+    
+    # Настройки Redis для Render
+    REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379')
+    
+    # Обновляем CHANNEL_LAYERS для Render
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {
+                "hosts": [REDIS_URL],
+                "channel_capacity": {
+                    "http.request": 200,
+                    "http.response!*": 100,
+                },
+            },
+        }
+    }
+    
+    # Обновляем CACHES для Render
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": REDIS_URL + "/1",
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            }
+        }
+    }
