@@ -123,9 +123,6 @@ else:
     SESSION_ENGINE = "django.contrib.sessions.backends.file"
     SESSION_FILE_PATH = os.path.join(BASE_DIR, 'sessions')
 
-# Инициализируем STATICFILES_DIRS как пустой список
-STATICFILES_DIRS = []
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -257,6 +254,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
+# Для локальной разработки
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
@@ -317,7 +319,7 @@ if 'RENDER' in os.environ:
     # Убедитесь что whitenoise в начале middleware
     MIDDLEWARE = [
         'django.middleware.security.SecurityMiddleware',
-        'whitenoise.middleware.WhiteNoiseMiddleware',
+        'whitenoise.middleware.WhiteNoiseMiddleware',  # ДОБАВЬТЕ ЗДЕСЬ
         'django.contrib.sessions.middleware.SessionMiddleware',
         'corsheaders.middleware.CorsMiddleware',
         'django.middleware.common.CommonMiddleware',
@@ -337,11 +339,6 @@ if 'RENDER' in os.environ:
             os.makedirs(SESSION_FILE_PATH, exist_ok=True)
         except Exception as e:
             print(f"Warning: Could not create session directory: {e}")
-else:
-    # Локальная разработка - добавляем директорию static если она существует
-    static_dir = BASE_DIR / 'static'
-    if static_dir.exists():
-        STATICFILES_DIRS.append(static_dir)
 
 # Создаем директорию для сессий если не существует (для локальной разработки)
 if SESSION_ENGINE == "django.contrib.sessions.backends.file":
