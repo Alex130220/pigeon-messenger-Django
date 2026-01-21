@@ -1,0 +1,30 @@
+# Основные
+Django==5.2.3
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# База данных
+psycopg2-binary==2.9.9
+dj-database-url==2.1.0
+
+# API и CORS
+djangorestframework==3.15.1
+django-cors-headers==4.3.1
+
+# WebSocket (если нужен) - используем совместимую версию
+daphne==3.0.2  # Совместима с Python 3.11
+channels==3.0.5  # Более старая, но стабильная версия
+
+# Двухфакторная аутентификация (КОММЕНТИРУЕМ - добавляем позже)
+# django-otp==1.6.3  # Правильная версия
+# django-two-factor-auth==1.15.1
+# phonenumbers==8.13.35
+
+# Другие зависимости
+Pillow==10.3.0
+django-environ==0.11.2
+django-redis==5.4.0
+redis==5.0.1
+django-otp==1.6.3
+django-two-factor-auth==1.15.1
+phonenumbers==8.13.35
