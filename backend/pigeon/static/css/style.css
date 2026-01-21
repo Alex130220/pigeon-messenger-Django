@@ -1,240 +1,233 @@
-/* ========== Глобальные стили ========== */
-:root {
-  --primary: #87ceeb;
-  --primary-dark: #898176;
-  --secondary: #f43f5e;
-  --dark: #131313;
-  --light: #f0ffff;
-  --gray: #94a3b8;
-  --success: #10b981;
+/* Основные стили Pigeon Messenger */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background-image: url('../images/background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-    background-repeat: no-repeat;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     min-height: 100vh;
+    color: #333;
 }
 
-/* Затемнение фона для лучшей читаемости контента */
-body::before {
-    content: '';
-    position: fixed;
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Навигация */
+.navbar {
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    padding: 15px 0;
+    position: sticky;
     top: 0;
-    left: 0;
-    width: 0%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* Прозрачность затемнения */
-    z-index: -1;
+    z-index: 1000;
 }
 
-/* ========== Hero секция ========== */
-.hero-section {
-   background: linear-gradient(135deg, #f0ffff 30%, #fff44f 70%);
-  border: none;
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s ease;
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-.hero-section::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(135deg, #fff44f 60%, #f0ffff 40%);
-  );
-  animation: rotate 20s linear infinite;
-  z-index: -1;
+.logo {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #667eea;
+    font-size: 24px;
+    font-weight: bold;
 }
 
-/* ========== Иконки фич ========== */
-.feature-icon {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  color: white;
-  border-radius: 20px;
-  box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.logo img {
+    height: 40px;
+    margin-right: 10px;
 }
 
-.feature-icon:hover {
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 15px 30px -5px rgba(99, 102, 241, 0.4);
+.nav-links {
+    display: flex;
+    gap: 20px;
 }
 
-/* ========== Карточки фич ========== */
+.btn {
+    padding: 10px 25px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.btn:hover {
+    background: #5a67d8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+    background: #718096;
+}
+
+.btn-secondary:hover {
+    background: #4a5568;
+}
+
+/* Основной контент */
+.hero {
+    text-align: center;
+    padding: 100px 20px;
+    color: white;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero p {
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto 40px;
+    line-height: 1.6;
+}
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 80px 20px;
+}
+
 .feature-card {
-  background: linear-gradient(135deg, #898176 0%, #f0ffff 100%);
-  border-radius: 16px;
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  overflow: hidden;
-  position: relative;
-}
-
-.feature-card::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--secondary));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
 }
 
 .feature-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-10px);
 }
 
-.feature-card:hover::after {
-  transform: scaleX(1);
+.feature-card h3 {
+    color: #667eea;
+    margin-bottom: 15px;
+    font-size: 1.5rem;
 }
 
-/* ========== Анимации ========== */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+.feature-card p {
+    color: #666;
+    line-height: 1.6;
 }
 
-@keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+/* Сообщения */
+.messages-container {
+    background: white;
+    border-radius: 10px;
+    padding: 30px;
+    margin: 40px 0;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
 }
 
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.feature-card {
-  animation: fadeIn 0.6s ease-out forwards;
-}
-
-.feature-card:nth-child(1) { animation-delay: 0.1s; }
-.feature-card:nth-child(2) { animation-delay: 0.3s; }
-.feature-card:nth-child(3) { animation-delay: 0.5s; }
-
-/* ========== Кнопки ========== */
-.btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-  border: none;
-  border-radius: 12px;
-  padding: 12px 24px;
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-  transition: all 0.3s ease;
-}
-
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
-  color: white;
-}
-
-/* ========== Адаптивность ========== */
-@media (max-width: 768px) {
-  .hero-section {
-    padding: 2rem 1rem !important;
-    border-radius: 12px;
-  }
-  
-  .display-4 {
-    font-size: 2.2rem;
-  }
-  
-  .feature-icon {
-    width: 60px;
-    height: 60px;
-  }
-}
-
-/* ========== Неоновая подсветка ========== */
-.neon-text {
-  text-shadow: 0 0 8px rgba(99, 102, 241, 0.7);
-}
-
-/* ========== Параллакс эффект ========== */
-.parallax-bg {
-  background-attachment: fixed;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-
-/* Стили для переписки */
-.unread {
-    background-color: #898176;
-    border-left: 4px solid var(--primary);
-}
-
-.message-bubble {
-    max-width: 70%;
-    padding: 12px 16px;
-    border-radius: 18px;
-    margin-bottom: 8px;
-    word-break: break-word;
-}
-
-.message-bubble.bg-primary {
-    border-bottom-right-radius: 4px;
-}
-
-.message-bubble.bg-light {
-    border-bottom-left-radius: 4px;
-    background-color: #f0ffff !important;
-}
-
-.chat-messages {
-    scroll-behavior: smooth;
-}
-
-/* Анимация новых сообщений */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.message-bubble {
-    animation: fadeIn 0.3s ease-out;
-}
-
-/* Стили для выбора пользователя */
-.avatar {
-    width: 40px;
-    height: 40px;
+.message {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
     display: flex;
+    justify-content: space-between;
     align-items: center;
+}
+
+.message:last-child {
+    border-bottom: none;
+}
+
+.message-info {
+    flex: 1;
+}
+
+.message-sender {
+    font-weight: bold;
+    color: #667eea;
+}
+
+.message-content {
+    color: #333;
+    margin-top: 5px;
+}
+
+.message-time {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* Footer */
+footer {
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(10px);
+    padding: 40px 0;
+    text-align: center;
+    color: white;
+    margin-top: 80px;
+}
+
+.footer-links {
+    display: flex;
     justify-content: center;
+    gap: 30px;
+    margin: 20px 0;
 }
 
-.list-group-item {
-    border-radius: 8px !important;
-    margin-bottom: 8px;
-    transition: all 0.3s;
-    border: 1px solid rgba(0,0,0,0.05);
+.footer-links a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
 
-.list-group-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+.footer-links a:hover {
+    color: #e2e8f0;
 }
 
-.custom-navbar {
-  background: linear-gradient(135deg, #898176 0%, #87ceeb 100%); !important;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+/* Уведомления */
+.notification {
+    padding: 15px 20px;
+    border-radius: 5px;
+    margin: 10px 0;
+    color: white;
+}
+
+.notification-success {
+    background: #38a169;
+}
+
+.notification-error {
+    background: #e53e3e;
+}
+
+.notification-info {
+    background: #3182ce;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+    
+    .features {
+        grid-template-columns: 1fr;
+    }
+    
+    .nav-links {
+        flex-direction: column;
+        gap: 10px;
+    }
 }
