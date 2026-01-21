@@ -1,13 +1,11 @@
-# render.yaml
 services:
   - type: web
-    name: pigeon-messenger
+    name: pigeon-backend
     env: python
     buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
-      python manage.py migrate
-    startCommand: gunicorn pigeon.wsgi:application
+    startCommand: gunicorn pigeon.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -17,11 +15,5 @@ services:
         generateValue: true
       - key: DEBUG
         value: false
-      - key: PYTHON_VERSION
-        value: 3.11.0
-
-databases:
-  - name: pigeon-db
-    databaseName: pigeon
-    user: pigeon_user
-    plan: free
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,localhost,127.0.0.1"
