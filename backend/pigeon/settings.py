@@ -178,7 +178,6 @@ TEMPLATES = [
         'DIRS': [
             BASE_DIR / 'templates',
             BASE_DIR / 'pigeon/templates',
-            BASE_DIR / 'frontend/build',  # Для React билда
         ],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -253,15 +252,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / 'static',
-    BASE_DIR / 'frontend/build',
-    BASE_DIR / 'frontend/build/static',
-]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media' 
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -329,6 +323,11 @@ if 'RENDER' in os.environ:
             os.makedirs(SESSION_FILE_PATH, exist_ok=True)
         except Exception as e:
             print(f"Warning: Could not create session directory: {e}")
+else:
+    # Локальная разработка - добавляем директории статических файлов
+    STATICFILES_DIRS = [
+        BASE_DIR / 'static',
+    ]
 
 # Создаем директорию для сессий если не существует (для локальной разработки)
 if SESSION_ENGINE == "django.contrib.sessions.backends.file":
@@ -336,3 +335,22 @@ if SESSION_ENGINE == "django.contrib.sessions.backends.file":
         os.makedirs(SESSION_FILE_PATH, exist_ok=True)
     except Exception as e:
         print(f"Warning: Could not create session directory: {e}")
+
+# Создаем необходимые директории
+def create_directories():
+    directories = [
+        MEDIA_ROOT,
+        STATIC_ROOT,
+    ]
+    
+    if 'SESSION_FILE_PATH' in locals():
+        directories.append(SESSION_FILE_PATH)
+    
+    for directory in directories:
+        try:
+            os.makedirs(directory, exist_ok=True)
+        except Exception as e:
+            print(f"Warning: Could not create directory {directory}: {e}")
+
+# Вызываем создание директорий при загрузке настроек
+create_directories()
