@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <h2 class="mb-4">Мои переписки</h2>
+    <div class="list-group">
+        {% for conversation in conversations %}
+            {% with last_message=conversation.messages.last %}
+            <a href="{% url 'messenger:conversation_detail' conversation.id %}" 
+               class="list-group-item list-group-item-action {% if not last_message.is_read and last_message.sender != request.user %}unread{% endif %}">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">
+                        {% for user in conversation.participants.all %}
+                            {% if user != request.user %}{{ user.get_full_name }}{% endif %}
+                        {% endfor %}
+                    </h5>
+                    <small>{{ last_message.timestamp|timesince }} назад</small>
+                </div>
+                <p class="mb-1">
+                    {% if last_message.sender == request.user %}
+                        Вы: {{ last_message.content|truncatechars:50 }}
+                    {% else %}
+                        {{ last_message.content|truncatechars:50 }}
+                    {% endif %}
+                </p>
+            </a>
+            {% endwith %}
+        {% empty %}
+            <div class="alert alert-info">У вас пока нет переписок</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
