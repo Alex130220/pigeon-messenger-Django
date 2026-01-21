@@ -28,3 +28,4 @@ redis==5.0.1
 django-otp==1.6.3
 django-two-factor-auth==1.15.1
 phonenumbers==8.13.35
+dj-database-url==2.1.0
