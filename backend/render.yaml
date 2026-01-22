@@ -2,50 +2,19 @@ services:
   - type: web
     name: pigeon-backend
     env: python
-  buildCommand: |
-  echo "🚀 НАЧАЛО СБОРКИ..."
-  echo "=================="
-  
-  # 1. Обновляем pip
-  pip install --upgrade pip
-  
-  # 2. Устанавливаем МИНИМАЛЬНЫЕ зависимости
-  echo "📦 Установка зависимостей..."
-  pip install django==5.2.3
-  pip install gunicorn==21.2.0
-  pip install whitenoise==6.6.0
-  pip install psycopg2-binary==2.9.9
-  pip install dj-database-url==2.1.0
-  
-  # 3. ЗАПУСКАЕМ НАШ СКРИПТ МИГРАЦИИ
-  echo "🛠️  Запуск скрипта миграции..."
-  python migrate_all.py
-  
-  # 4. Пробуем стандартные миграции Django (на всякий случай)
-  echo "🔄 Пробуем стандартные миграции Django..."
-  python manage.py makemigrations --noinput || echo "⚠️ Не удалось создать миграции"
-  python manage.py migrate --noinput || echo "⚠️ Не удалось применить миграции"
-  
-  # 5. Создаем директории
-  echo "📁 Создание директорий..."
-  mkdir -p static/css static/js static/images
-  mkdir -p staticfiles
-  mkdir -p media
-  mkdir -p sessions
-  
-  # 6. Создаем базовые статические файлы
-  echo "🎨 Создание статических файлов..."
-  echo "/* Базовые стили */ body { margin: 0; padding: 20px; font-family: sans-serif; }" > static/css/style.css
-  echo "console.log('App loaded');" > static/js/main.js
-  echo "placeholder" > static/images/Pigeon.png
-  
-  # 7. Собираем статику
-  echo "📊 Сборка статических файлов..."
-  python manage.py collectstatic --noinput --clear
-  
-  echo "✅ СБОРКА ЗАВЕРШЕНА!"
-  echo "=================="
-    startCommand: gunicorn pigeon.wsgi:application --bind 0.0.0.0:$PORT
+    buildCommand: |
+      echo "🚀 ЗАПУСК СБОРКИ..."
+      echo "=================="
+      
+      # Даем права на выполнение скрипта
+      chmod +x deploy.sh
+      
+      # Запускаем скрипт деплоя
+      ./deploy.sh
+      
+      echo "=================="
+      echo "✅ СБОРКА ЗАВЕРШЕНА!"
+    startCommand: gunicorn pigeon.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -59,7 +28,11 @@ services:
         value: 3.11.0
       - key: DISABLE_COLLECTSTATIC
         value: 0
+      - key: DJANGO_SETTINGS_MODULE
+        value: pigeon.settings
     autoDeploy: true
+    healthCheckPath: /
+    numInstances: 1
 
 databases:
   - name: pigeon-db

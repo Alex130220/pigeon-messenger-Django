@@ -1,3 +1,9 @@
+# users/models.py
+"""
+ВНИМАНИЕ: Временно отключена кастомная модель пользователя.
+
+Исходный код (закомментирован для истории):
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.core.validators import RegexValidator
@@ -35,4 +41,10 @@ class CustomUser(AbstractUser):
 
     def get_full_name(self):
         return f"{self.last_name} {self.first_name}".strip()
-        return self.username
+"""
+
+# Временно оставляем файл пустым
+# Мы используем стандартную модель auth.User
+# Это позволит запустить проект на Render без ошибок
+
+print("ℹ️  Используется стандартная модель auth.User")
