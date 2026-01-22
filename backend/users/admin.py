@@ -1,25 +1,41 @@
 # users/admin.py
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import User
+"""
+ВНИМАНИЕ: Этот файл временно отключен для работы на Render.
+Модель User уже зарегистрирована Django автоматически.
+"""
 
-try:
-    # Пробуем импортировать CustomUser
-    from .models import CustomUser
+import os
+
+# Определяем, работаем ли мы на Render
+IS_RENDER = 'RENDER' in os.environ
+
+if IS_RENDER:
+    # НА RENDER: используем стандартную модель
+    print("=" * 60)
+    print("🐦 PIGEON MESSENGER - RENDER MODE")
+    print("Используется стандартная модель auth.User")
+    print("Модель уже зарегистрирована Django")
+    print("=" * 60)
     
-    # Если CustomUser существует, регистрируем его
-    class CustomUserAdmin(UserAdmin):
-        # Добавьте кастомные поля, если нужно
-        list_display = ('username', 'email', 'first_name', 'last_name', 'position', 'phone', 'is_staff')
-        fieldsets = UserAdmin.fieldsets + (
-            ('Дополнительная информация', {'fields': ('position', 'phone', 'department')}),
-        )
+    # НИЧЕГО НЕ РЕГИСТРИРУЕМ!
+    # Модель User уже зарегистрирована Django по умолчанию
     
-    admin.site.register(CustomUser, CustomUserAdmin)
-    print("✅ Используется кастомная модель CustomUser")
-    
-except ImportError:
-    # Если CustomUser не существует, используем стандартную модель
-    admin.site.register(User, UserAdmin)
-    print("✅ Используется стандартная модель auth.User")
-    print("💡 Для использования CustomUser раскомментируйте код в users/models.py")
+else:
+    # ЛОКАЛЬНО: пытаемся использовать CustomUser
+    try:
+        from django.contrib import admin
+        from django.contrib.auth.admin import UserAdmin
+        from .models import CustomUser
+        
+        class CustomUserAdmin(UserAdmin):
+            list_display = ('username', 'email', 'first_name', 'last_name', 'position')
+            fieldsets = UserAdmin.fieldsets + (
+                ('Дополнительная информация', {'fields': ('position', 'phone')}),
+            )
+        
+        admin.site.register(CustomUser, CustomUserAdmin)
+        print("✅ Локально: Используется кастомная модель CustomUser")
+        
+    except ImportError:
+        # Если CustomUser не существует, ничего не делаем
+        print("⚠️ Локально: CustomUser не найден, используем стандартную модель")
