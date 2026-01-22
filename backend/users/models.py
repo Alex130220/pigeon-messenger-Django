@@ -18,6 +18,13 @@ class CustomUser(AbstractUser):
         validators=[phone_regex],
         verbose_name='Телефон')
 
+    department = models.ForeignKey(
+        'messenger.Department', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
+
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
@@ -28,3 +35,4 @@ class CustomUser(AbstractUser):
 
     def get_full_name(self):
         return f"{self.last_name} {self.first_name}".strip()
+        return self.username
