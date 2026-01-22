@@ -2,26 +2,31 @@ services:
   - type: web
     name: pigeon-backend
     env: python
+    region: oregon  # или другой регион по вашему выбору
+    plan: free  # или starter/pro для production
+    
     buildCommand: |
-      # Создаем директории для статических файлов
+      # Устанавливаем зависимости
+      pip install -r requirements.txt
+      
+      # Создаем директории для статических файлов (если нужно)
       mkdir -p static/css static/js static/images
       
-      # Создаем простые статические файлы
+      # Создаем простые статические файлы (если нужно)
       echo "/* Основные стили */ body { margin: 0; font-family: sans-serif; }" > static/css/style.css
       echo "console.log('Pigeon loaded');" > static/js/main.js
       echo "placeholder" > static/images/Pigeon.png
       echo "placeholder" > static/images/app-screenshot.png
       
-      # Устанавливаем зависимости
-      pip install -r requirements.txt
-      
-      # Применяем миграции ДО collectstatic
+      # Применяем миграции
       python manage.py makemigrations --noinput
       python manage.py migrate --noinput
       
       # Собираем статические файлы
       python manage.py collectstatic --noinput --clear
+    
     startCommand: gunicorn pigeon.wsgi:application --bind 0.0.0.0:$PORT
+    
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -29,8 +34,27 @@ services:
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
-      - key: DEBUG
-        value: false
+      - key: WEB_CONCURRENCY
+        value: 4
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: DEBUG
+        value: "false"
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com"  # или ваш домен
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://*.onrender.com"  # или ваш домен
+    
     autoDeploy: true
+    
+    # Health check (опционально)
+    healthCheckPath: /
+    initialDelaySeconds: 45
+
+# База данных (если еще не создана)
+databases:
+  - name: pigeon-db
+    region: oregon
+    plan: free  # или starter/pro для production
+    databaseName: pigeon
+    user: pigeon_user
