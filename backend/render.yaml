@@ -2,31 +2,103 @@ services:
   - type: web
     name: pigeon-backend
     env: python
-    region: oregon  # или другой регион по вашему выбору
-    plan: free  # или starter/pro для production
-    
     buildCommand: |
-      # Устанавливаем зависимости
+      # 1. Создаем базовые директории
+      mkdir -p static/css static/js static/images
+      mkdir -p staticfiles media sessions
+      
+      # 2. Устанавливаем зависимости
       pip install -r requirements.txt
       
-      # Создаем директории для статических файлов (если нужно)
-      mkdir -p static/css static/js static/images
+      # 3. ЭКСТРЕННОЕ создание таблицы
+      echo "🚨 ЭКСТРЕННОЕ СОЗДАНИЕ ТАБЛИЦЫ users_customuser..."
       
-      # Создаем простые статические файлы (если нужно)
-      echo "/* Основные стили */ body { margin: 0; font-family: sans-serif; }" > static/css/style.css
-      echo "console.log('Pigeon loaded');" > static/js/main.js
-      echo "placeholder" > static/images/Pigeon.png
-      echo "placeholder" > static/images/app-screenshot.png
+      # Создаем файл с SQL командой
+      cat > create_table.sql << 'EOF'
+      DO $$
+      BEGIN
+          IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'users_customuser') THEN
+              CREATE TABLE users_customuser (
+                  id SERIAL PRIMARY KEY,
+                  password VARCHAR(128) NOT NULL,
+                  last_login TIMESTAMP WITH TIME ZONE NULL,
+                  is_superuser BOOLEAN NOT NULL,
+                  username VARCHAR(150) UNIQUE NOT NULL,
+                  first_name VARCHAR(150) NOT NULL,
+                  last_name VARCHAR(150) NOT NULL,
+                  email VARCHAR(254) NOT NULL,
+                  is_staff BOOLEAN NOT NULL,
+                  is_active BOOLEAN NOT NULL,
+                  date_joined TIMESTAMP WITH TIME ZONE NOT NULL,
+                  avatar VARCHAR(100),
+                  phone VARCHAR(20),
+                  bio TEXT,
+                  birth_date DATE,
+                  position VARCHAR(100)
+              );
+              RAISE NOTICE 'Table users_customuser created';
+          END IF;
+      END $$;
+      EOF
       
-      # Применяем миграции
-      python manage.py makemigrations --noinput
-      python manage.py migrate --noinput
+      # Пытаемся выполнить через Python
+      python -c "
+      import os
+      import sys
       
-      # Собираем статические файлы
+      os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'pigeon.settings')
+      
+      try:
+          import django
+          django.setup()
+          
+          from django.db import connection
+          
+          with open('create_table.sql', 'r') as f:
+              sql = f.read()
+          
+          with connection.cursor() as cursor:
+              cursor.execute(sql)
+              print('SQL executed successfully')
+              
+              # Проверяем
+              cursor.execute(\"SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'users_customuser')\")
+              exists = cursor.fetchone()[0]
+              
+              if exists:
+                  print('✅ Table users_customuser exists')
+                  
+                  # Создаем пользователя
+                  from django.contrib.auth import get_user_model
+                  User = get_user_model()
+                  
+                  try:
+                      if not User.objects.filter(username='admin').exists():
+                          User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
+                          print('✅ Superuser created')
+                      else:
+                          print('ℹ️ Superuser already exists')
+                  except Exception as e:
+                      print(f'⚠️ Error creating user: {e}')
+              else:
+                  print('❌ Table still does not exist')
+                  
+      except Exception as e:
+          print(f'❌ Error: {e}')
+          import traceback
+          traceback.print_exc()
+      "
+      
+      # 4. Пробуем стандартные миграции
+      echo "🔄 Пробуем стандартные миграции..."
+      python manage.py migrate --noinput || echo "⚠️ Migrations failed"
+      
+      # 5. Собираем статику
+      echo "🎨 Сборка статических файлов..."
       python manage.py collectstatic --noinput --clear
-    
+      
+      echo "✅ Build complete!"
     startCommand: gunicorn pigeon.wsgi:application --bind 0.0.0.0:$PORT
-    
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -34,27 +106,9 @@ services:
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
-      - key: WEB_CONCURRENCY
-        value: 4
+      - key: DEBUG
+        value: false
       - key: PYTHON_VERSION
         value: 3.11.0
-      - key: DEBUG
-        value: "false"
-      - key: ALLOWED_HOSTS
-        value: ".onrender.com"  # или ваш домен
-      - key: CSRF_TRUSTED_ORIGINS
-        value: "https://*.onrender.com"  # или ваш домен
-    
-    autoDeploy: true
-    
-    # Health check (опционально)
-    healthCheckPath: /
-    initialDelaySeconds: 45
-
-# База данных (если еще не создана)
-databases:
-  - name: pigeon-db
-    region: oregon
-    plan: free  # или starter/pro для production
-    databaseName: pigeon
-    user: pigeon_user
+      - key: CREATE_USERS
+        value: "true"
