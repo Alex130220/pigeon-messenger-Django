@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 import os
 import environ
+import sys
 env = environ.Env()
 environ.Env.read_env()
 
@@ -367,3 +368,37 @@ def ensure_directories():
 
 # Вызываем создание директорий
 ensure_directories()
+
+def check_and_create_tables():
+    """Проверяет и создает таблицы при необходимости"""
+    if 'runserver' in sys.argv or 'gunicorn' in sys.argv:
+        print("🔍 Проверка состояния базы данных...")
+        try:
+            from django.db import connection
+            with connection.cursor() as cursor:
+                # Проверяем существование таблицы users_customuser
+                cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users_customuser')")
+                exists = cursor.fetchone()[0]
+                
+                if not exists:
+                    print("⚠️ Таблица users_customuser не существует. Запуск миграций...")
+                    from django.core.management import execute_from_command_line
+                    execute_from_command_line(['manage.py', 'makemigrations', 'users', '--noinput'])
+                    execute_from_command_line(['manage.py', 'migrate', 'users', '--noinput'])
+                    print("✅ Миграции пользователей применены")
+                    
+                # Проверяем другие важные таблицы
+                for table in ['auth_user', 'django_content_type', 'django_session']:
+                    cursor.execute(f"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '{table}')")
+                    if not cursor.fetchone()[0]:
+                        print(f"⚠️ Таблица {table} не существует. Запуск миграций...")
+                        execute_from_command_line(['manage.py', 'migrate', 'auth', '--noinput'])
+                        execute_from_command_line(['manage.py', 'migrate', 'contenttypes', '--noinput'])
+                        execute_from_command_line(['manage.py', 'migrate', 'sessions', '--noinput'])
+                        break
+                        
+        except Exception as e:
+            print(f"⚠️ Ошибка при проверке базы данных: {e}")
+
+# Вызываем проверку при импорте настроек
+check_and_create_tables()
