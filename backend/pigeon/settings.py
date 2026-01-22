@@ -11,14 +11,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
 import os
 import environ
 import sys
+from django.db import connection
 env = environ.Env()
 environ.Env.read_env()
-
-# Добавляем импорт для Render.com
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -402,3 +401,45 @@ def check_and_create_tables():
 
 # Вызываем проверку при импорте настроек
 check_and_create_tables()
+
+def emergency_auth_fix():
+    """Экстренное решение для аутентификации без таблицы"""
+    if 'runserver' in sys.argv or 'gunicorn' in sys.argv:
+        print("🔧 Проверка аварийной аутентификации...")
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users_customuser')")
+                if not cursor.fetchone()[0]:
+                    print("⚠️ Таблица users_customuser не существует!")
+                    print("💡 Включен аварийный режим аутентификации")
+                    
+                    # Патчим стандартный бэкенд аутентификации
+                    from django.contrib.auth.backends import ModelBackend
+                    from django.contrib.auth import get_user_model
+                    
+                    class EmergencyModelBackend(ModelBackend):
+                        def authenticate(self, request, username=None, password=None, **kwargs):
+                            try:
+                                return super().authenticate(request, username, password, **kwargs)
+                            except Exception as e:
+                                # Если таблицы нет, позволяем вход с дефолтными учетками
+                                if username == 'admin' and password == 'admin123':
+                                    print(f"⚡ Аварийный вход пользователя: {username}")
+                                    User = get_user_model()
+                                    user = User()
+                                    user.pk = 1
+                                    user.username = 'admin'
+                                    user.is_staff = True
+                                    user.is_superuser = True
+                                    user.is_active = True
+                                    user._password = '!admin123'
+                                    return user
+                                return None
+                    
+                    # Заменяем стандартный бэкенд
+                    AUTHENTICATION_BACKENDS = ['pigeon.settings.EmergencyModelBackend']
+        except Exception as e:
+            print(f"⚠️ Ошибка при проверке таблицы: {e}")
+
+# Вызываем проверку
+emergency_auth_fix()

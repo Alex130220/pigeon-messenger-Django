@@ -2,34 +2,29 @@ services:
   - type: web
     name: pigeon-backend
     env: python
-    buildCommand: |
+  buildCommand: |
   echo "🚀 НАЧАЛО СБОРКИ..."
   echo "=================="
   
   # 1. Обновляем pip
   pip install --upgrade pip
   
-  # 2. Устанавливаем ВСЕ зависимости
+  # 2. Устанавливаем МИНИМАЛЬНЫЕ зависимости
   echo "📦 Установка зависимостей..."
   pip install django==5.2.3
   pip install gunicorn==21.2.0
   pip install whitenoise==6.6.0
   pip install psycopg2-binary==2.9.9
   pip install dj-database-url==2.1.0
-  pip install django-cors-headers==4.3.1
-  pip install channels==4.1.0
-  pip install daphne==4.1.0
-  pip install django-otp==1.4.1
-  pip install django-two-factor-auth==1.15.3
-  pip install djangorestframework==3.15.2
   
-  # 3. СОЗДАЕМ миграции для ВСЕХ приложений
-  echo "🔄 Создание миграций..."
-  python manage.py makemigrations users messenger notifications --noinput
+  # 3. ЗАПУСКАЕМ НАШ СКРИПТ МИГРАЦИИ
+  echo "🛠️  Запуск скрипта миграции..."
+  python migrate_all.py
   
-  # 4. ПРИМЕНЯЕМ ВСЕ миграции
-  echo "📊 Применение миграций..."
-  python manage.py migrate --noinput
+  # 4. Пробуем стандартные миграции Django (на всякий случай)
+  echo "🔄 Пробуем стандартные миграции Django..."
+  python manage.py makemigrations --noinput || echo "⚠️ Не удалось создать миграции"
+  python manage.py migrate --noinput || echo "⚠️ Не удалось применить миграции"
   
   # 5. Создаем директории
   echo "📁 Создание директорий..."
@@ -44,18 +39,12 @@ services:
   echo "console.log('App loaded');" > static/js/main.js
   echo "placeholder" > static/images/Pigeon.png
   
-  # 7. Создаем суперпользователя (опционально)
-  echo "👑 Создание суперпользователя..."
-  if [ -z "$(echo "from django.contrib.auth import get_user_model; User = get_user_model(); print(User.objects.filter(username='admin').exists())" | python manage.py shell)" ]; then
-    echo "from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@example.com', 'admin123') if not User.objects.filter(username='admin').exists() else None" | python manage.py shell
-  fi
-  
-  # 8. Собираем статику
+  # 7. Собираем статику
   echo "📊 Сборка статических файлов..."
   python manage.py collectstatic --noinput --clear
-      
-      echo "✅ СБОРКА ЗАВЕРШЕНА!"
-      echo "=================="
+  
+  echo "✅ СБОРКА ЗАВЕРШЕНА!"
+  echo "=================="
     startCommand: gunicorn pigeon.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DATABASE_URL

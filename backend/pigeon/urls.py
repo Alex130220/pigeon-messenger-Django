@@ -1,18 +1,5 @@
 """
 URL configuration for pigeon project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
 from django.contrib import admin
@@ -20,11 +7,9 @@ from django.urls import path, include, re_path
 from django.contrib.auth.views import LogoutView
 from django.views.decorators.http import require_POST
 from django.conf import settings
+from django.shortcuts import render
 from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
-from django.views.generic import TemplateView  
-from channels.auth import AuthMiddlewareStack
-from channels.routing import ProtocolTypeRouter, URLRouter
 from two_factor.urls import urlpatterns as tf_urls
 from .views import (
     home_view,
@@ -41,14 +26,19 @@ from .views import (
 )
 import messenger.routing
 
+def emergency_login(request):
+    """Аварийная страница входа при проблемах с БД"""
+    return render(request, 'registration/emergency_login.html')
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home_view, name='home'),
     path('about/', about_view, name='about'),
     path('features/', features_view, name='features'),
     
-    # Аутентификация (оставлен только CustomLoginView)
+    # Аутентификация
     path('login/', CustomLoginView.as_view(), name='login'),
+    path('emergency-login/', emergency_login, name='emergency_login'),
     path('logout/', require_POST(LogoutView.as_view()), name='logout'),
     path('register/', RegisterView.as_view(), name='register'),
     
@@ -72,22 +62,23 @@ urlpatterns = [
     path('account/', include(tf_urls)),
     path('health/', health_check, name='health_check'),
     
-    # WebSocket маршруты (обновлены для работы с conversation_id)
-    re_path(r'^ws/conversation/(?P<conversation_id>\w+)/$', AuthMiddlewareStack(
-        URLRouter(
-            messenger.routing.websocket_urlpatterns
-        )
-    )),
-] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \
-  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # WebSocket маршруты
+    re_path(r'^ws/conversation/(?P<conversation_id>\w+)/$', include(messenger.routing.websocket_urlpatterns)),
+]
+
+# Добавляем статические и медиа файлы только в режиме разработки
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 handler404 = 'pigeon.views.handler404'
 handler500 = 'pigeon.views.handler500'
 
-application = ProtocolTypeRouter({
-    "websocket": AuthMiddlewareStack(
-        URLRouter(
-            messenger.routing.websocket_urlpatterns
-        )
-    ),
-})
+# УДАЛИТЕ ЭТОТ БЛОК - application должен быть определен только в asgi.py
+# application = ProtocolTypeRouter({
+#     "websocket": AuthMiddlewareStack(
+#         URLRouter(
+#             messenger.routing.websocket_urlpatterns
+#         )
+#     ),
+# })
