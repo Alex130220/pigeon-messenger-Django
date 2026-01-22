@@ -14,10 +14,14 @@ from pathlib import Path
 import dj_database_url
 import os
 import environ
-import sys
 from django.db import connection
 env = environ.Env()
 environ.Env.read_env()
+import sys
+if 'RENDER' in sys.environ:
+    print("=" * 60)
+    print("🐦 PIGEON MESSENGER - RENDER EMERGENCY MODE")
+    print("=" * 60)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
