@@ -1,0 +1,77 @@
+<header class="sticky-top">
+    <nav class="navbar navbar-expand-lg navbar-dark custom-navbar shadow">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-dove me-2"></i>Pigeon
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if 'about' in request.resolver_match.url_name %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'about' %}">About</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% if 'features' in request.resolver_match.url_name %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'features' %}">Features</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle me-1"></i> 
+                            {{ user.get_short_name|default:user.username }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            {% if 'users:profile' in request.resolver_match.url_name %}
+                            <li><a class="dropdown-item" href="{% url 'users:profile' %}">Profile</a></li>
+                            {% endif %}
+                            
+                            {% if 'profile' in request.resolver_match.url_name %}
+                            <li><a class="dropdown-item" href="{% url 'users:profile' %}">Profile</a></li>
+                            {% endif %}
+
+                            {% if 'messenger_inbox' in request.resolver_match.url_name %}
+                            <li><a class="dropdown-item" href="{% url 'messenger_inbox' %}">Messages</a></li>
+                            {% endif %}
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form id="logout-form" action="{% url 'logout' %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:register' %}">Register</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'messenger:conversation_list' %}">
+                            <i class="fas fa-comments me-1"></i> Сообщения
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'chat' %}">
+                            <i class="fas fa-comments me-1"></i> Чат
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>

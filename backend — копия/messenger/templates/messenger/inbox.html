@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Входящие сообщения</h2>
+    <div class="list-group">
+        {% for message in messages %}
+        <a href="#" class="list-group-item list-group-item-action">
+            <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">{{ message.sender.username }}</h5>
+                <small>{{ message.timestamp }}</small>
+            </div>
+            <p class="mb-1">{{ message.content|truncatechars:100 }}</p>
+        </a>
+        {% empty %}
+        <div class="alert alert-info">Нет сообщений</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

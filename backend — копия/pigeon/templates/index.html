@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Example</title>
+    <style>
+        #ws-status {
+            padding: 10px;
+            margin: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+        }
+        .connected { color: green; }
+        .disconnected { color: red; }
+    </style>
+</head>
+<body>
+    <div id="ws-status" class="disconnected">Состояние: Не подключено</div>
+    
+    <script>
+        // 1. Подключаемся к WebSocket серверу
+        const socket = new WebSocket('ws://localhost:8000/ws/chat/general/');
+        const statusElement = document.getElementById("ws-status");
+
+        // 2. Назначаем обработчики событий
+        socket.onopen = function() {
+            console.log("Соединение установлено");
+            statusElement.textContent = "Состояние: Подключено";
+            statusElement.classList.remove("disconnected");
+            statusElement.classList.add("connected");
+        };
+
+        socket.onmessage = function(event) {
+            console.log("Получены данные:", event.data);
+            // Можно выводить сообщения на страницу
+            const message = document.createElement("div");
+            message.textContent = event.data;
+            document.body.appendChild(message);
+        };
+
+        socket.onclose = function() {
+            console.log("Соединение закрыто");
+            statusElement.textContent = "Состояние: Отключено";
+            statusElement.classList.remove("connected");
+            statusElement.classList.add("disconnected");
+        };
+
+        socket.onerror = function(error) {
+            console.error("Ошибка WebSocket:", error);
+        };
+
+        // 3. Функция для отправки сообщений (можно вызвать из консоли)
+        window.sendMessage = function(text) {
+            if (socket.readyState === WebSocket.OPEN) {
+                socket.send(text);
+                console.log("Сообщение отправлено:", text);
+            } else {
+                console.error("Невозможно отправить - соединение не активно");
+            }
+        };
+    </script>
+</body>
+</html>

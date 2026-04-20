@@ -1,0 +1,41 @@
+<footer class="bg-dark text-white py-4 mt-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <h5>Pigeon Messenger</h5>
+                <p>Современное решение для вашего общения</p>
+            </div>
+            <div class="col-md-2 mb-3">
+                <h5>Навигация</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'home' %}" class="text-white">Главная</a></li>
+                    <li><a href="{% url 'about' %}" class="text-white">О нас</a></li>
+                    <li><a href="{% url 'features' %}" class="text-white">Возможности</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2 mb-3">
+                <h5>Помощь</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" class="text-white">FAQ</a></li>
+                    <li><a href="#" class="text-white">Поддержка</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h5>Контакты</h5>
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-envelope me-2"></i> support@pigeon.com</li>
+                    <li><i class="fas fa-phone me-2"></i> +7 (981) 846-64-62</li>
+                </ul>
+                <div class="social-links mt-2">
+                    <a href="#" class="text-white me-2"><i class="fab fa-telegram fa-lg"></i></a>
+                    <a href="#" class="text-white me-2"><i class="fab fa-vk fa-lg"></i></a>
+                    <a href="#" class="text-white me-2"><i class="fab fa-github fa-lg"></i></a>
+                </div>
+            </div>
+        </div>
+        <hr class="my-3 bg-light">
+        <div class="text-center">
+            <p class="mb-0">&copy; {% now "Y" %} Pigeon Messenger. Все права защищены.</p>
+        </div>
+    </div>
+</footer>
