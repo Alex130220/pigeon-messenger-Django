@@ -1,0 +1,47 @@
+# render.yaml
+services:
+  - type: web
+    name: pigeon-backend
+    env: python
+   buildCommand: |
+  echo "🚀 ЗАПУСК СБОРКИ PIGEON MESSENGER"
+  echo "=================================="
+  
+  # 0. САМОЕ ВАЖНОЕ: Исправляем ВСЕ импорты CustomUser
+  echo "🔧 ИСПРАВЛЕНИЕ ВСЕХ ИМПОРТОВ..."
+  python fix_all_imports.py
+  
+  # 1. Создаем рабочий users/admin.py
+  echo "🛠️  Создание users/admin.py для Render..."
+  cat > users/admin.py << 'EOF'
+  # users/admin.py - ВЕРСИЯ ДЛЯ RENDER
+  
+  # НИЧЕГО НЕ ДЕЛАЕМ!
+  # Модель User уже зарегистрирована Django автоматически
+  # Любая попытка admin.site.register() вызовет ошибку
+  
+  print("✅ Админка: Используется стандартная модель auth.User")
+  EOF
+  
+  # 2. Устанавливаем зависимости
+  echo "📦 Установка зависимостей..."
+  pip install --upgrade pip
+  pip install django==5.2.3
+  pip install gunicorn==21.2.0
+  pip install whitenoise==6.6.0
+  pip install psycopg2-binary==2.9.9
+  pip install dj-database-url==2.1.0
+  pip install djangorestframework==3.15.2
+  pip install django-cors-headers==4.3.1
+  
+  # 3. Выполняем миграции
+  echo "🔄 Выполнение миграций..."
+  python manage.py migrate --noinput
+  
+  # 4. Создаем суперпользователя
+  echo "👑 Создание суперпользователя..."
+  echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'admin123') if not User.objects.filter(username='admin').exists() else print('✅ Суперпользователь уже существует')" | python manage.py shell
+  
+  # 5. Собираем статику
+  echo "📦 Сборка статических файлов..."
+  python manage.py collectstatic --noinput --clear
